@@ -1,0 +1,34 @@
+# Node modules and dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ionic build output
+www/
+platforms/
+plugins/
+android/
+ios/
+
+# Cache files
+.ionic/
+.sass-cache/
+.tmp/
+.versions/
+coverage/
+
+# IDE specific files
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Environment variables
+.env
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Do not ignore .devcontainer
+!.devcontainer/
