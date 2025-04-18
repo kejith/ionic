@@ -37,6 +37,7 @@
     }
   },
   "postCreateCommand": "npm install",
+  "postStartCommand": "bash .devcontainer/post-start.sh",
   "remoteUser": "node",
   "mounts": [
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/node/.gitconfig,type=bind,consistency=cached"

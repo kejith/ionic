@@ -12,5 +12,8 @@ RUN npm install -g @ionic/cli cordova
 # Create app directory
 WORKDIR /workspace
 
+# Ensure proper Git permissions for the node user
+RUN mkdir -p /home/node/.config && chown -R node:node /home/node
+
 # User setup for VSCode
 USER node
