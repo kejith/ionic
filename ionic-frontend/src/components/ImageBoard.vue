@@ -29,6 +29,7 @@ const selectedImage = ref(null)
 const gridRef = ref(null)
 const columnsCount = ref(4)
 const rowsMap = ref(new Map())
+const placeholders = ref([])
 
 // Calculate the proper layout based on viewport
 onMounted(() => {
@@ -53,6 +54,23 @@ const calculateLayout = () => {
     }
     newRowsMap.get(rowIndex).push(image)
   })
+
+  // Generate placeholder items for the last row if needed
+  placeholders.value = []
+  const lastRowIndex = Math.floor((images.value.length - 1) / columnsCount.value)
+  const lastRowItems = newRowsMap.get(lastRowIndex) || []
+  const placeholdersNeeded = columnsCount.value - lastRowItems.length
+
+  if (placeholdersNeeded > 0 && lastRowItems.length > 0) {
+    for (let i = 0; i < placeholdersNeeded; i++) {
+      placeholders.value.push({ id: `placeholder-${i}`, isPlaceholder: true })
+    }
+    if (!newRowsMap.has(lastRowIndex)) {
+      newRowsMap.set(lastRowIndex, [])
+    }
+    newRowsMap.get(lastRowIndex).push(...placeholders.value)
+  }
+
   rowsMap.value = newRowsMap
 }
 
@@ -61,13 +79,18 @@ const rows = computed(() => {
     return {
       rowIndex,
       images: rowImages,
-      expanded: selectedImage.value &&
-               Math.floor(images.value.findIndex(img => img.id === selectedImage.value.id) / columnsCount.value) === rowIndex
+      expanded:
+        selectedImage.value &&
+        Math.floor(
+          images.value.findIndex((img) => img.id === selectedImage.value.id) / columnsCount.value,
+        ) === rowIndex,
     }
   })
 })
 
 const selectImage = (image) => {
+  if (image.isPlaceholder) return
+
   if (selectedImage.value && selectedImage.value.id === image.id) {
     selectedImage.value = null
   } else {
@@ -77,7 +100,7 @@ const selectImage = (image) => {
 
 const getSelectedRowIndex = computed(() => {
   if (!selectedImage.value) return -1
-  const imageIndex = images.value.findIndex(img => img.id === selectedImage.value.id)
+  const imageIndex = images.value.findIndex((img) => img.id === selectedImage.value.id)
   return Math.floor(imageIndex / columnsCount.value)
 })
 </script>
@@ -88,16 +111,21 @@ const getSelectedRowIndex = computed(() => {
       v-for="row in rows"
       :key="row.rowIndex"
       class="image-row"
-      :class="{ 'after-expanded': row.rowIndex > getSelectedRowIndex && getSelectedRowIndex !== -1 }"
+      :class="{
+        'after-expanded': row.rowIndex > getSelectedRowIndex && getSelectedRowIndex !== -1,
+      }"
     >
       <div
         v-for="image in row.images"
         :key="image.id"
         class="image-container"
         @click="selectImage(image)"
-        :class="{ 'selected': selectedImage && selectedImage.id === image.id }"
+        :class="{
+          selected: selectedImage && selectedImage.id === image.id,
+          placeholder: image.isPlaceholder,
+        }"
       >
-        <img :src="image.src" :alt="image.title" />
+        <img v-if="!image.isPlaceholder" :src="image.src" :alt="image.title" />
       </div>
     </div>
 
@@ -105,7 +133,7 @@ const getSelectedRowIndex = computed(() => {
       v-if="selectedImage"
       class="image-detail"
       :style="{
-        top: `${(Math.floor(images.findIndex(img => img.id === selectedImage.id) / columnsCount) + 1) * (100 / Math.ceil(images.length / columnsCount))}vh`
+        top: `${(Math.floor(images.findIndex((img) => img.id === selectedImage.id) / columnsCount) + 1) * (100 / Math.ceil(images.length / columnsCount))}vh`,
       }"
     >
       <div class="detail-content">
@@ -145,7 +173,12 @@ const getSelectedRowIndex = computed(() => {
   transition: all 0.2s ease;
 }
 
-.image-container:hover {
+.image-container.placeholder {
+  cursor: default;
+  background-color: transparent;
+}
+
+.image-container:hover:not(.placeholder) {
   z-index: 1;
   transform: scale(1.02);
 }
